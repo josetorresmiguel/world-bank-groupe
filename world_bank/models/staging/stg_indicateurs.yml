@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: stg_indicateurs
+    description: "Indicateurs World Bank nettoyés — une ligne par pays et par année. Les agrégats régionaux (World, European Union…) sont exclus."
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - pays_code
+            - annee
+
+    columns:
+      - name: pays_code
+        description: "Code ISO3 du pays (ESP, FRA, PER…). Jamais NULL, jamais vide."
+        tests:
+          - not_null
+
+      - name: pays_nom
+        description: "Nom du pays en anglais."
+        tests:
+          - not_null
+
+      - name: annee
+        description: "Année de l'observation (1960 → aujourd'hui)."
+        tests:
+          - not_null
+
+      - name: Population
+        description: "Population totale du pays cette année-là."

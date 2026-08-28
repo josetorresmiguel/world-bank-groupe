@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: world_bank
+    description: "Données brutes World Bank chargées par load_data.py via l'API."
+    project: data-guest-jose-luis
+    dataset: world_bank_raw
+    tables:
+      - name: raw_data
+        description: "17 490 lignes — un pays × une année. 16 indicateurs."
