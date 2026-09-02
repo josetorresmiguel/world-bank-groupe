@@ -1,20 +1,22 @@
-# Python-generated files
+# Credenciales
+cle_bigquery.json
+
+# Python
 __pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+env/
 
-# Virtual environments
-.venv
-
-# Fichiers générés par dbt (recréés à chaque dbt run)
+# dbt
 target/
 dbt_packages/
-logs/
 
-# Secrets — NE JAMAIS committer
-*.json
-.env
+# IDE
+.vscode/
+.idea/
+
+# OS
 .DS_Store
+.env
