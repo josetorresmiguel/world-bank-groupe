@@ -1,6 +1,6 @@
 with source as (
 
-    select * from {{ ref('stg_indicateurs') }}
+            select * from {{ ref('int_indicateurs') }}
 
 ),
 

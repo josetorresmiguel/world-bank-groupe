@@ -3,7 +3,7 @@
 
 with source as (
 
-    select * from {{ ref('stg_indicateurs') }}
+    select * from {{ ref('int_indicateurs') }}
     where annee between 2000 and 2023
 
 ),

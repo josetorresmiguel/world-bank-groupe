@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_indicateurs
+    description: Une ligne par pays et par année, une colonne par indicateur.
+
+    columns:
+      - name: pays_code
+        tests:
+          - not_null
+
+      - name: annee
+        tests:
+          - not_null

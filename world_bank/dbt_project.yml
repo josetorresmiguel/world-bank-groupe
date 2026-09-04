@@ -33,5 +33,7 @@ models:
   world_bank:
     staging:
       +materialized: view
+    intermediate:
+      +materialized: view
     marts:
       +materialized: table
