@@ -1,31 +1,25 @@
-with source as (
+-- models/marts/dim_pays.sql
+-- Une ligne par pays.
+-- region et income_level ne sont pas disponibles dans l'API indicateurs :
+-- ils viendront de l'endpoint /country dans une prochaine itération.
 
-            select * from {{ ref('int_indicateurs') }}
+{{ config(materialized='table') }}
 
-),
-
-agrege as (
+with pays as (
 
     select
         pays_code,
-        max(pays_nom) as pays_nom,
-        max(annee)    as derniere_annee,
-
-        max(PIB)                     as PIB,
-        max(PIB_par_habitant)        as PIB_par_habitant,
-        max(Population)              as Population,
-        max(Esperance_vie)           as Esperance_vie,
-        max(Chomage)                 as Chomage,
-        max(Acces_electricite)       as Acces_electricite,
-        max(Alphabetisation_adultes) as Alphabetisation_adultes,
-        max(Depense_de_sante)        as Depense_de_sante,
-
-        count(*) as nb_annees_observees
-
-    from source
-    where annee >= 2000
+        any_value(pays_nom) as pays_nom
+    from {{ ref('stg_indicateurs') }}
+    where pays_code is not null
     group by pays_code
 
 )
 
-select * from agrege
+select
+    to_hex(md5(pays_code))  as pays_id,
+    pays_code               as countryiso3code,
+    pays_nom                as country_name,
+    cast(null as string)    as region,
+    cast(null as string)    as income_level
+from pays

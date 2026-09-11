@@ -13,10 +13,8 @@ from google.cloud import bigquery
 load_dotenv()
 
 
-# Codes des indicateurs à récupérer.
-# Le nom en français ne sert qu'à l'affichage dans la console : il n'est
-# jamais envoyé à BigQuery. Le nom officiel de l'indicateur arrive déjà
-# dans le champ indicator.value renvoyé par l'API.
+
+# complète des 16 indicateurs et per_page à 20000.
 INDICATORS = {
     "NY.GDP.MKTP.CD": "PIB",
     "NY.GDP.PCAP.CD": "PIB par habitant",
@@ -42,11 +40,25 @@ DATASET_ID = os.getenv("DATASET_ID")
 TABLE_ID = os.getenv("TABLE_ID")
 
 FULL_TABLE_ID = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+# Adresse de base de l'API World Bank. Le code de l'indicateur
+# se colle à la fin.
+URL_API_BASE = "https://api.worldbank.org/v2/country/all/indicator"
+
+# Nombre de lignes demandées par page à l'API.
+LIGNES_PAR_PAGE = 20000
+
+# Secondes avant d'abandonner un appel qui ne répond pas.
+DELAI_ATTENTE = 30
+
+# Pause entre deux appels, pour ne pas saturer l'API.
+PAUSE_ENTRE_APPELS = 0.5
+
+# Code HTTP renvoyé quand tout s'est bien passé.
+CODE_HTTP_OK = 200
 
 # Nombre de hash relus dans BigQuery à chaque exécution.
 # Doit rester supérieur au nombre de lignes de la table, sinon les lignes
 # les plus anciennes ne sont pas reconnues et sont réinsérées en doublon.
-# Aujourd'hui : 16 indicateurs × 17490 lignes = 279 840.
 LIMITE_HASH = 300000
 
 
@@ -71,12 +83,11 @@ def recuperer_indicateur(code):
     Renvoie une liste de dictionnaires, tels que l'API les envoie.
 
     L'API répond toujours sous la forme [métadonnées, données] :
-      data[0] = {"page": 1, "pages": 2, "per_page": 20000, "total": 17556}
+      data[0] = {"page": 1, "pages": 18, "per_page": 1000, "total": 17490}
       data[1] = [ligne, ligne, ...]
     """
 
-    url = f"https://api.worldbank.org/v2/country/all/indicator/{code}"
-
+    url = f"{URL_API_BASE}/{code}"
     lignes = []
     page = 1
     total = None
@@ -84,7 +95,7 @@ def recuperer_indicateur(code):
     while True:
         params = {
             "format": "json",
-            "per_page": 20000,
+            "per_page": LIGNES_PAR_PAGE,
             "page": page,
         }
 
@@ -92,13 +103,13 @@ def recuperer_indicateur(code):
             response = requests.get(
                 url,
                 params=params,
-                timeout=30,
+                timeout=DELAI_ATTENTE,
             )
         except requests.RequestException as e:
             print(f"❌ Erreur de requête (page {page}) : {e}")
             return []
 
-        if response.status_code != 200:
+        if response.status_code != CODE_HTTP_OK:
             print(f"❌ Erreur HTTP : {response.status_code}")
             return []
 
@@ -132,7 +143,7 @@ def recuperer_indicateur(code):
             break
 
         page += 1
-        time.sleep(0.5)
+        time.sleep(PAUSE_ENTRE_APPELS)
 
     # Contrôle : autant de lignes reçues que de lignes annoncées ?
     if total is not None and len(lignes) != total:
@@ -153,7 +164,7 @@ def recuperer_donnees_world_bank():
         lignes.extend(recuperer_indicateur(code))
 
         # Petite pause entre les appels API
-        time.sleep(0.5)
+        time.sleep(PAUSE_ENTRE_APPELS)
 
     if not lignes:
         raise ValueError(
@@ -178,9 +189,6 @@ def ingest_data():
     client = bigquery.Client()
 
     # 3. Vérification si la table existe déjà.
-    #    Seul get_table est dans le try : c'est la seule ligne qui peut
-    #    lever NotFound. La requête SQL vient après, une fois qu'on sait
-    #    que la table est là.
     table_existe = True
 
     try:

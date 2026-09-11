@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: dim_annee
+    description: "Dimension année — une ligne par année."
+    columns:
+      - name: annee_id
+        description: "Clé primaire (hash de l'année)."
+        tests: [unique, not_null]
+      - name: annee
+        tests: [unique, not_null]
+
+  - name: dim_pays
+    description: "Dimension pays — une ligne par pays."
+    columns:
+      - name: pays_id
+        description: "Clé primaire (hash du code ISO3)."
+        tests: [unique, not_null]
+      - name: countryiso3code
+        tests: [unique, not_null]
+      - name: country_name
+        tests: [not_null]
+
+  - name: dim_indicateur
+    description: "Dimension indicateur — une ligne par indicateur."
+    columns:
+      - name: indicateur_id
+        description: "Clé primaire (hash du code indicateur)."
+        tests: [unique, not_null]
+      - name: indicator_code
+        tests: [unique, not_null]
+      - name: categorie
+        tests:
+          - accepted_values:
+              values: ['economie', 'demographie', 'sante', 'education', 'environnement', 'non_classe']
+
+  - name: fact_valeurs
+    description: "Table de faits — une ligne par pays-année-indicateur."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [pays_id, annee_id, indicateur_id]
+    columns:
+      - name: pays_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_pays')
+              field: pays_id
+      - name: annee_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_annee')
+              field: annee_id
+      - name: indicateur_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_indicateur')
+              field: indicateur_id
+      - name: valeur
+        tests: [not_null]

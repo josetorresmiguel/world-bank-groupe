@@ -1,0 +1,14 @@
+indicator_code,categorie
+NY.GDP.MKTP.CD,economie
+NY.GDP.PCAP.CD,economie
+FP.CPI.TOTL.ZG,economie
+SP.POP.TOTL,demographie
+SP.DYN.CBRT.IN,demographie
+SP.DYN.LE00.IN,sante
+SH.XPD.CHEX.GD.ZS,sante
+SE.ADT.LITR.ZS,education
+SE.SEC.ENRR,education
+SE.PRM.CMPT.ZS,education
+SE.XPD.TOTL.GD.ZS,education
+EG.ELC.ACCS.ZS,environnement
+EN.ATM.CO2E.PC,environnement
