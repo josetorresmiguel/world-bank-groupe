@@ -33,6 +33,16 @@ avec_retry(ingest_data, essais=3, delai=5)
 # 2. Transformation : dbt build (modèles + tests)
 print("\n=== 2. dbt build (raw → staging → marts) ===")
 subprocess.run(
+    ["dbt", "deps"],
+    cwd="world_bank",
+    check=True,
+)
+subprocess.run(
+    [ "dbt", "build"],
+    cwd="world_bank",
+    check=True,
+)
+subprocess.run(
     [ "dbt", "build"],
     cwd="world_bank",
     check=True,
