@@ -1,0 +1,46 @@
+name: Pipeline World Bank (ingestion + dbt)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: echo '${{ secrets.GCP_SA_KEY }}' > "$GITHUB_WORKSPACE/cle_bigquery.json"
+
+      - name: Configurer le profil dbt
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<EOF
+          world_bank:
+            target: dev
+            outputs:
+              dev:
+                type: bigquery
+                method: service-account
+                project: data-guest-jose-luis
+                dataset: dbt_dev
+                keyfile: $GITHUB_WORKSPACE/cle_bigquery.json
+                location: US
+                threads: 4
+                job_execution_timeout_seconds: 300
+          EOF
+
+      - name: Lancer le pipeline
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/cle_bigquery.json
+          PROJECT_ID: data-guest-jose-luis
+          DATASET_ID: world_bank_raw
+          TABLE_ID: raw_data
+        run: python run_pipeline.py
