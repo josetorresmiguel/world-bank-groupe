@@ -3,7 +3,8 @@ name: Pipeline World Bank (ingestion + dbt)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *" 
+    - cron: "5 6 * * *" 
+   timezone: "Europe/Paris"
 
 jobs:
   pipeline:
